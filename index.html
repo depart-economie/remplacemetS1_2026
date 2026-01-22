@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>برنامج التعويضي والاطلاع على الأوراق</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      direction: rtl;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f9;
+      color: #2c3e50;
+    }
+
+    .site-header{
+  background: #2c3e50;
+  color: white;
+  padding: 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+.header-banner{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.header-titles{
+  padding: 14px 20px 18px 20px;
+}
+
+.header-titles h1{
+  margin: 6px 0;
+}
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 { color: #34495e; }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: bold;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover { background-color: #2980b9; }
+
+    button:disabled{
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    img {
+      margin-top: 20px;
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .notice{
+     text-align: center;
+     margin: 8px 0 14px 0;
+     color: #2c3e50;
+    }
+    .center-title{
+     text-align: center;
+    }
+
+    .results {
+      margin-top: 20px;
+      background-color: #ecf0f1;
+      padding: 15px;
+      border-radius: 6px;
+    }
+
+    .results ul { padding-right: 20px; }
+
+    @media (max-width: 600px) {
+      main { margin: 10px; padding: 15px; }
+    }
+
+    /* جدول */
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+  <img
+    class="header-banner"
+    src="./assets/banner.png"
+    alt="جامعة فرحات عباس سطيف 1 - كلية العلوم الاقتصادية والتجارية وعلوم التسيير - قسم العلوم الاقتصادية"
+  />
+
+  <div class="header-titles">
+    <h1>قسم العلوم الاقتصادية</h1>
+    <h1>برنامج الامتحانات التعويضية والاطلاع على الأوراق</h1>
+  </div>
+</header>
+
+
+  <main>
+    <!-- القسم 1: عرض البرامج -->
+    <section>
+      <h2 class="center-title">عرض البرنامج </h2>
+
+      <label for="level">اختر المستوى:</label>
+      <select id="level" onchange="populateSpecialties()">
+        <option value="">-- اختر --</option>
+        <option value="license">ليسانس</option>
+        <option value="master">ماستر</option>
+      </select>
+
+      <label for="specialty">اختر التخصص:</label>
+      <select id="specialty" onchange="showProgramImage()">
+        <option value="">-- اختر التخصص --</option>
+      </select>
+
+      <div id="programImageContainer"></div>
+    </section>
+
+    <hr style="margin: 30px 0;">
+
+    <!-- القسم 2: تبريرات التغيب + PDF -->
+    <section>
+      <h2 class="center-title">تبريرات التغيب في الامتحان حسب المقاييس</h2>
+      <p class="notice">القائمة غير نهائية يرجى تفقدها 24 ساعة قبل الامتحان</p>
+      <p class="notice">في حالة عدم ظهور مقياسكم في خانة البحث فهذا يعني انكم غير معنيين بالامتحان التعويضي</p>
+
+      <label for="search">اختر أو اكتب اسم المقياس:</label>
+      <input list="modules" id="search" placeholder="اكتب اسم المقياس ..." />
+      <datalist id="modules"></datalist>
+
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>اللقب</th>
+            <th>رقم التسجيل</th>
+            <th>المقياس</th>
+            <th>التخصص</th>
+            <th>المستوى</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <button id="pdfBtn" onclick="exportToPDF()" disabled>تحميل القائمة كـ PDF</button>
+    </section>
+  </main>
+
+  <script>
+    // ---------- برامج التخصص (كما هي) ----------
+    const specialties = {
+      license: [
+        "السنة الأولى تداول واسواق مالية",
+        "السنة الثانية جذع مشترك",
+        "اقتصاد كمي",
+        "اقتصاد دولي",
+        "اقتصاد وتسيير المؤسسات",
+        "اقتصاد مالي ونقدي"
+        
+      ],
+      master: [
+        "ماستر 1 كل التخصصات",
+        " ماستر 2 كل التخصصات"
+      ]
+    };
+
+    const programPdfs = {
+      "السنة الأولى تداول واسواق مالية": "https://drive.google.com/file/d/13hBFuQSfPlJfSscTOBSYXtDTUJVuzRCX/preview",
+      "السنة الثانية جذع مشترك": "https://drive.google.com/file/d/1ry034O_xg67WiXtVXz2yMDGm_2FLe1DI/preview",
+      "اقتصاد كمي": "https://drive.google.com/file/d/1WuF_-D_RNFQiHOV_CET3XoxKoPh4hfqg/preview",
+      "اقتصاد دولي": "https://drive.google.com/file/d/18CLvLTUVeVGWSTCIqpOGwL6b-x4V8cLS/preview",
+      "اقتصاد وتسيير المؤسسات": "https://drive.google.com/file/d/1aH5LFsSgqmdSRaYrZGlqhh4NATmYz7G3/preview",
+      "اقتصاد مالي ونقدي": "https://drive.google.com/file/d/1G9UDj9Ho5H8nLWaBD1RDmJuStJvA2amf/preview",
+      "ماستر 1 كل التخصصات": "https://drive.google.com/file/d/1BUQKdCmsVuvd_X-qZbPef8oK2sdImJBK/preview",
+      " ماستر 2 كل التخصصات": "https://drive.google.com/file/d/1aMlSYmhX15HRh1WCkjqvHCsui25Qivoi/preview"
+    };
+
+    function populateSpecialties() {
+      const level = document.getElementById("level").value;
+      const specialtySelect = document.getElementById("specialty");
+      specialtySelect.innerHTML = '<option value="">-- اختر التخصص --</option>';
+
+      if (specialties[level]) {
+        specialties[level].forEach(s => {
+          const option = document.createElement("option");
+          option.value = s;
+          option.textContent = s;
+          specialtySelect.appendChild(option);
+        });
+      }
+
+      document.getElementById("programImageContainer").innerHTML = "";
+    }
+
+    function showProgramImage() {
+  const specialty = document.getElementById("specialty").value;
+  const pdfUrl = programPdfs[specialty];
+  const container = document.getElementById("programImageContainer");
+
+  if (pdfUrl) {
+    container.innerHTML = `
+      <iframe
+        src="${pdfUrl}"
+        style="width:100%; height:700px; border:1px solid #ccc; border-radius:8px; margin-top:20px;"
+        allow="autoplay"
+      ></iframe>
+    `;
+  } else {
+    container.innerHTML = "";
+  }
+}
+
+
+    // ---------- CSV + الجدول ----------
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vREueC1I9dE5e7hu1SJpRg13SJ8Fya9mfT396J9zcSslRzwhX51YXd6jhMz23Y2_P1iwi1O3BvhJRH1/pub?output=csv';
+
+    // ملاحظة: هذا parser بسيط. إن كان CSV يحتوي فواصل داخل نصوص بين " " فالأفضل استخدام PapaParse.
+    async function fetchCSV(url) {
+      const response = await fetch(url, { cache: "no-store" });
+      const text = await response.text();
+
+      return text
+        .trim()
+        .split('\n')
+        .map(row => row.split(',').map(c => (c ?? "").trim()));
+    }
+
+    function getUniqueModules(data) {
+      const moduleIndex = data[0].indexOf("المقياس");
+      const modules = new Set();
+
+      data.slice(1).forEach(row => {
+        if (row[moduleIndex]) modules.add(row[moduleIndex].trim());
+      });
+
+      return [...modules];
+    }
+
+    function fillModuleSuggestions(modules) {
+      const datalist = document.getElementById("modules");
+      datalist.innerHTML = "";
+
+      modules.forEach(module => {
+        const option = document.createElement("option");
+        option.value = module;
+        datalist.appendChild(option);
+      });
+    }
+
+    function displayData(data) {
+      const tbody = document.querySelector('#dataTable tbody');
+      tbody.innerHTML = '';
+
+      data.slice(1).forEach(row => {
+        if (row.length < 6) return;
+
+        const tr = document.createElement('tr');
+        for (let i = 0; i < 6; i++) {
+          const td = document.createElement('td');
+          td.textContent = row[i] ?? "";
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setupSearch(fullData) {
+  const input = document.getElementById('search');
+  const moduleIndex = fullData[0].indexOf("المقياس"); // عمود المقياس من الهيدر
+
+  input.addEventListener('input', () => {
+    const term = (input.value || "").trim().toLowerCase();
+
+    // إذا خانة البحث فارغة: اعرض كل البيانات
+    if (!term) {
+      displayData(fullData);
+      return;
+    }
+
+    // فلترة فقط على عمود "المقياس"
+    const filtered = fullData.filter((row, i) => {
+      if (i === 0) return false; // تجاهل الهيدر
+      const moduleCell = (row[moduleIndex] || "").toLowerCase();
+      return moduleCell.includes(term);
+    });
+
+    displayData([fullData[0], ...filtered]);
+  });
+}
+
+
+    // تحميل البيانات ثم تفعيل زر PDF
+    let loaded = false;
+
+    fetchCSV(sheetUrl).then(data => {
+      const modules = getUniqueModules(data);
+      fillModuleSuggestions(modules);
+      displayData(data);
+      setupSearch(data);
+
+      loaded = true;
+      document.getElementById("pdfBtn").disabled = false;
+    }).catch(err => {
+      console.error(err);
+      alert("تعذر تحميل البيانات من Google Sheets. تحقق من رابط CSV أو إعدادات النشر.");
+    });
+
+    // ---------- تصدير PDF (الحل هنا) ----------
+    function exportToPDF() {
+      if (!loaded) return;
+
+      const table = document.getElementById("dataTable");
+
+      // wrapper يجب أن يكون داخل DOM لكي لا يخرج PDF فارغ في بعض المتصفحات/البيئات
+      const wrapper = document.createElement("div");
+      wrapper.style.direction = "rtl";
+      wrapper.style.fontFamily = "Arial, sans-serif";
+      wrapper.style.background = "#fff";
+      wrapper.style.padding = "16px";
+
+      const title = document.createElement("h2");
+      title.textContent = "قائمة الطلبة المعنيين بالامتحان التعويضي";
+      title.style.textAlign = "center";
+      title.style.margin = "0 0 12px 0";
+
+      const clone = table.cloneNode(true);
+      clone.style.width = "100%";
+
+      wrapper.appendChild(title);
+      wrapper.appendChild(clone);
+
+      // إدراج مؤقت خارج الشاشة
+      const holder = document.createElement("div");
+      holder.style.position = "fixed";
+      holder.style.left = "-10000px";
+      holder.style.top = "0";
+      holder.appendChild(wrapper);
+      document.body.appendChild(holder);
+
+      const opt = {
+        margin: 10, // بالـ mm ضمن jsPDF الافتراضي مع unit mm
+        filename: 'قائمة_الطلبة.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          scrollY: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+
+      html2pdf()
+        .set(opt)
+        .from(wrapper)
+        .save()
+        .finally(() => {
+          // تنظيف
+          document.body.removeChild(holder);
+        });
+    }
+  </script>
+</body>
+</html>
